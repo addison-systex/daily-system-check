@@ -42,7 +42,7 @@ const CheckItem = ({ id, label, value, onChange }) => {
     );
 };
 
-export default function CheckForm({ systems, checkItems, onSuccess }) {
+export default function CheckForm({ systems, checkItems, prefilledSystem, onSuccess }) {
     const [formData, setFormData] = useState({
         systemName: '',
         checker: '',
@@ -67,6 +67,19 @@ export default function CheckForm({ systems, checkItems, onSuccess }) {
         }
     }, [formData.systemName, systems]);
 
+    // 從 URL 預填系統名稱
+    useEffect(() => {
+        if (prefilledSystem && systems.length > 0) {
+            const system = systems.find(s => s.name === prefilledSystem);
+            if (system) {
+                setFormData(prev => ({
+                    ...prev,
+                    systemName: system.name
+                }));
+            }
+        }
+    }, [prefilledSystem, systems]);
+
     // 當勾選代理人時,自動帶入代理人
     useEffect(() => {
         if (formData.isDeputy && selectedSystem) {
@@ -90,6 +103,10 @@ export default function CheckForm({ systems, checkItems, onSuccess }) {
         e.preventDefault();
         setSubmitting(true);
 
+        console.log('=== 開始提交表單 ===');
+        console.log('表單資料:', formData);
+        console.log('提交 URL:', import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL);
+
         try {
             const response = await fetch(import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL, {
                 method: 'POST',
@@ -97,10 +114,18 @@ export default function CheckForm({ systems, checkItems, onSuccess }) {
                 headers: { "Content-Type": "text/plain" }
             });
 
+            console.log('回應狀態:', response.status);
+            const responseText = await response.text();
+            console.log('回應內容:', responseText);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             onSuccess();
         } catch (err) {
-            console.error("Submission error:", err);
-            alert("提交失敗，請檢查網路連線。");
+            console.error("提交錯誤:", err);
+            alert("提交失敗，請檢查網路連線。錯誤: " + err.message);
         } finally {
             setSubmitting(false);
         }

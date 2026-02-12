@@ -8,8 +8,18 @@ function App() {
     const [loading, setLoading] = useState(true);
     const [systems, setSystems] = useState([]);
     const [checkItems, setCheckItems] = useState([]);
+    const [prefilledSystem, setPrefilledSystem] = useState(null);
 
     useEffect(() => {
+        // 從 URL 路徑讀取系統名稱 (例如: /daily-system-check/ARRMS)
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const systemNameFromUrl = pathParts[pathParts.length - 1];
+
+        // 如果不是根路徑且不是 index.html,就當作系統名稱
+        if (systemNameFromUrl && systemNameFromUrl !== 'daily-system-check' && !systemNameFromUrl.endsWith('.html')) {
+            setPrefilledSystem(decodeURIComponent(systemNameFromUrl));
+        }
+
         const fetchConfig = () => {
             try {
                 const callbackName = 'jsonpCallback_' + Date.now();
@@ -61,6 +71,7 @@ function App() {
                                 key="form"
                                 systems={systems}
                                 checkItems={checkItems}
+                                prefilledSystem={prefilledSystem}
                                 onSuccess={() => setSubmitted(true)}
                             />
                         )}
