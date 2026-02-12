@@ -1,5 +1,6 @@
 const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // 若使用獨立腳本，請在此填入 Google Sheet ID
 const CONFIG_SHEET_NAME = '系統基本資料';
+const CHECK_ITEMS_SHEET_NAME = '系統檢查項目';
 const REPORT_SHEET_NAME = '每日系統檢核表回報';
 
 /**
@@ -14,12 +15,28 @@ function getSpreadsheet() {
 }
 
 /**
- * Serves the list of systems for the frontend dropdown.
+ * Serves the configuration data for the frontend.
  */
 function doGet(e) {
   const systems = getSystemList();
-  return ContentService.createTextOutput(JSON.stringify(systems))
-    .setMimeType(ContentService.MimeType.JSON);
+  const checkItems = getCheckItems();
+  const callback = e.parameter.callback;
+  
+  const data = {
+    systems: systems,
+    checkItems: checkItems
+  };
+  
+  if (callback) {
+    // JSONP response
+    const jsonp = callback + '(' + JSON.stringify(data) + ')';
+    return ContentService.createTextOutput(jsonp)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    // Regular JSON response
+    return ContentService.createTextOutput(JSON.stringify(data))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /**
@@ -37,24 +54,24 @@ function doPost(e) {
     
     if (!sheet) {
       sheet = ss.insertSheet(systemName);
-      // Initialize headers if new
+      // Initialize headers dynamically based on check items
+      const checkItems = getCheckItems();
       const headers = [
-        '日期', '回報時間', 'ED01-AP/DB運作', 'EM01-Update/防毒', 'EY01-帳密Review', 
-        'ED02-備份檢查', 'EM02-效能檢查', 'EY02-權限盤點', 'ED03-硬碟空間', 
-        'EY03-還原演練', 'ED04-FileServer空間', 'OT01-其他', 
+        '日期', '回報時間',
+        ...checkItems.map(item => item.id),
         '檢核人', '是否代理', '代理人', '狀態'
       ];
       sheet.appendRow(headers);
     }
     
     const timestamp = new Date();
+    const checkItems = getCheckItems();
+    const checkValues = checkItems.map(item => data[item.id] || '');
+    
     const row = [
       Utilities.formatDate(timestamp, Session.getScriptTimeZone(), 'yyyy/MM/dd'),
       Utilities.formatDate(timestamp, Session.getScriptTimeZone(), 'HH:mm:ss'),
-      data.ED01, data.EM01, data.EY01,
-      data.ED02, data.EM02, data.EY02,
-      data.ED03, data.EY03, data.ED04,
-      data.OT01,
+      ...checkValues,
       data.checker,
       data.isDeputy ? 'Y' : 'N',
       data.deputyName || '',
@@ -83,22 +100,46 @@ function getSystemList() {
   if (!sheet) return [];
   
   const data = sheet.getDataRange().getValues();
-  // Assuming Row 1 is headers: System Name | Owner | Channel ID | Token
-  // [Name, Owner, ChannelID, Token]
-  // data[0] is header
+  // Headers: System Name | Owner | Deputy | General Deputy | Channel ID
+  // [Name, Owner, Deputy, GeneralDeputy, ChannelID]
   const systems = [];
   for (let i = 1; i < data.length; i++) {
-    // Ensure we have a system name at least
     if (data[i][0]) {
       systems.push({
         name: data[i][0],
         owner: data[i][1],
-        channelId: data[i][2],
-        token: data[i][3]
+        deputy: data[i][2] || '',
+        generalDeputy: data[i][3] || '',
+        channelId: data[i][4]
       });
     }
   }
   return systems;
+}
+
+/**
+ * Reads check items configuration.
+ */
+function getCheckItems() {
+  const ss = getSpreadsheet();
+  if (!ss) throw new Error("找不到試算表，請確認 SPREADSHEET_ID 設定");
+
+  const sheet = ss.getSheetByName(CHECK_ITEMS_SHEET_NAME);
+  if (!sheet) return [];
+  
+  const data = sheet.getDataRange().getValues();
+  // Headers: Item ID | Description
+  // [ItemID, Description]
+  const items = [];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0]) {
+      items.push({
+        id: data[i][0],
+        description: data[i][1]
+      });
+    }
+  }
+  return items;
 }
 
 /**
@@ -110,7 +151,7 @@ function sendMorningTrigger() {
   
   systems.forEach(sys => {
     const message = `早安！請進行今日的系統檢核：\n系統：${sys.name}\n負責人：${sys.owner}\n回報連結：${formUrl}`;
-    sendSlackMessage(sys.channelId, message, sys.token);
+    sendSlackMessage(sys.channelId, message);
   });
 }
 
@@ -138,7 +179,7 @@ function sendAfternoonTrigger() {
     
     if (!checked) {
       const message = `[提醒] ${sys.name} 尚未收到今日的系統檢核回報，請盡速完成！`;
-      sendSlackMessage(sys.channelId, message, sys.token);
+      sendSlackMessage(sys.channelId, message);
     }
   });
 }
@@ -150,6 +191,7 @@ function markUnreported() {
   const systems = getSystemList();
   const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy/MM/dd');
   const ss = getSpreadsheet();
+  const checkItems = getCheckItems();
   
   systems.forEach(sys => {
     let sheet = ss.getSheetByName(sys.name);
@@ -169,10 +211,11 @@ function markUnreported() {
     
     if (!checked) {
       // Write "Unreported" row
+      const naValues = checkItems.map(() => 'N/A');
       const row = [
         today,
         '19:00:00',
-        'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A',
+        ...naValues,
         'System', 'N', '', '未回報'
       ];
       sheet.appendRow(row);
@@ -181,8 +224,8 @@ function markUnreported() {
   });
 }
 
-function sendSlackMessage(channelId, text, token) {
-  const slackToken = token || PropertiesService.getScriptProperties().getProperty('SLACK_TOKEN');
+function sendSlackMessage(channelId, text) {
+  const slackToken = PropertiesService.getScriptProperties().getProperty('SLACK_TOKEN');
   
   if (!slackToken) {
     console.error('No Slack Token found');

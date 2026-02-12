@@ -1,53 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, AlertCircle } from 'lucide-react';
 
-const CheckItem = ({ id, label, value, onChange }) => (
-    <div className="flex items-center justify-between py-3 border-b border-morandi-border last:border-0 group hover:bg-gray-50 px-2 rounded-lg transition-colors">
-        <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer" htmlFor={id}>
-            <span className="text-morandi-primary font-bold mr-2">{id}</span>
-            {label}
-        </label>
-        <div className="flex space-x-4">
-            <label className="flex items-center space-x-1 cursor-pointer">
-                <input
-                    type="radio"
-                    name={id}
-                    value="Y"
-                    checked={value === 'Y'}
-                    onChange={() => onChange(id, 'Y')}
-                    className="form-radio text-morandi-accent focus:ring-morandi-accent h-4 w-4"
-                />
-                <span className="text-sm">是 (Y)</span>
+const CheckItem = ({ id, label, value, onChange }) => {
+    const isYes = value === 'Y';
+    const isNo = value === 'N';
+
+    return (
+        <div className={`flex items-center justify-between py-3 px-4 rounded-lg transition-all duration-300 ${isYes ? 'bg-green-50 border-2 border-green-400' :
+            isNo ? 'bg-red-50 border-2 border-red-400' :
+                'bg-white border border-morandi-border hover:bg-gray-50'
+            }`}>
+            <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer" htmlFor={id}>
+                <span className="text-morandi-primary font-bold mr-2">{id}</span>
+                {label}
             </label>
-            <label className="flex items-center space-x-1 cursor-pointer">
-                <input
-                    type="radio"
-                    name={id}
-                    value="N"
-                    checked={value === 'N'}
-                    onChange={() => onChange(id, 'N')}
-                    className="form-radio text-red-400 focus:ring-red-400 h-4 w-4"
-                />
-                <span className="text-sm">否 (N)</span>
-            </label>
+            <div className="flex space-x-4">
+                <label className="flex items-center space-x-1 cursor-pointer">
+                    <input
+                        type="radio"
+                        name={id}
+                        value="Y"
+                        checked={isYes}
+                        onChange={() => onChange(id, 'Y')}
+                        className="form-radio text-green-500 focus:ring-green-500 h-4 w-4"
+                    />
+                    <span className="text-sm font-medium">是</span>
+                </label>
+                <label className="flex items-center space-x-1 cursor-pointer">
+                    <input
+                        type="radio"
+                        name={id}
+                        value="N"
+                        checked={isNo}
+                        onChange={() => onChange(id, 'N')}
+                        className="form-radio text-red-500 focus:ring-red-500 h-4 w-4"
+                    />
+                    <span className="text-sm font-medium">否</span>
+                </label>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
-export default function CheckForm({ systems, onSuccess }) {
+export default function CheckForm({ systems, checkItems, onSuccess }) {
     const [formData, setFormData] = useState({
         systemName: '',
         checker: '',
         isDeputy: false,
-        deputyName: '',
-        ED01: '', EM01: '', EY01: '',
-        ED02: '', EM02: '', EY02: '',
-        ED03: '', EY03: '', ED04: '',
-        OT01: ''
+        deputyName: ''
     });
 
+    const [selectedSystem, setSelectedSystem] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+
+    // 當選擇系統時,自動帶入負責人
+    useEffect(() => {
+        if (formData.systemName) {
+            const system = systems.find(s => s.name === formData.systemName);
+            if (system) {
+                setSelectedSystem(system);
+                setFormData(prev => ({
+                    ...prev,
+                    checker: system.owner
+                }));
+            }
+        }
+    }, [formData.systemName, systems]);
+
+    // 當勾選代理人時,自動帶入代理人
+    useEffect(() => {
+        if (formData.isDeputy && selectedSystem) {
+            setFormData(prev => ({
+                ...prev,
+                deputyName: selectedSystem.deputy || selectedSystem.generalDeputy || ''
+            }));
+        } else if (!formData.isDeputy) {
+            setFormData(prev => ({
+                ...prev,
+                deputyName: ''
+            }));
+        }
+    }, [formData.isDeputy, selectedSystem]);
 
     const handleChange = (id, value) => {
         setFormData(prev => ({ ...prev, [id]: value }));
@@ -58,17 +91,12 @@ export default function CheckForm({ systems, onSuccess }) {
         setSubmitting(true);
 
         try {
-            // 使用 fetch POST 發送資料
-            // Google Apps Script 會有 CORS 限制，通常使用 no-cors 模式，或者傳送 text/plain
             const response = await fetch(import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify(formData),
-                // 使用 text/plain 避免觸發複雜的 CORS preflight
                 headers: { "Content-Type": "text/plain" }
             });
 
-            // 因為 GAS 重導向特性，有時無法直接讀取 response.json()
-            // 若無報錯即視為成功
             onSuccess();
         } catch (err) {
             console.error("Submission error:", err);
@@ -78,8 +106,26 @@ export default function CheckForm({ systems, onSuccess }) {
         }
     };
 
-    const isFormValid = formData.systemName && formData.checker &&
-        Object.keys(formData).filter(k => k.match(/E[DMY][0-9]+/)).every(k => formData[k]);
+    // 檢查所有檢核項目是否都已填寫
+    const allItemsFilled = checkItems.every(item => formData[item.id]);
+    const isFormValid = formData.systemName && formData.checker && allItemsFilled;
+
+    // 按項目編號前綴分組 (ED, EM, EY, etc.)
+    const groupedItems = checkItems.reduce((acc, item) => {
+        const prefix = item.id.match(/^[A-Z]+/)?.[0] || 'OTHER';
+        if (!acc[prefix]) acc[prefix] = [];
+        acc[prefix].push(item);
+        return acc;
+    }, {});
+
+    // 獲取代理人選項
+    const getDeputyOptions = () => {
+        if (!selectedSystem) return [];
+        const options = [];
+        if (selectedSystem.deputy) options.push(selectedSystem.deputy);
+        if (selectedSystem.generalDeputy) options.push(selectedSystem.generalDeputy);
+        return [...new Set(options)]; // 去重
+    };
 
     return (
         <motion.div
@@ -105,19 +151,19 @@ export default function CheckForm({ systems, onSuccess }) {
                             required
                         >
                             <option value="">請選擇系統...</option>
-                            {systems.map(s => <option key={s.name} value={s.name}>{s.name} ({s.owner})</option>)}
+                            {systems.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                         </select>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-morandi-text mb-1">檢核人姓名</label>
+                            <label className="block text-sm font-medium text-morandi-text mb-1">負責人</label>
                             <input
                                 type="text"
-                                className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none"
+                                className="w-full rounded-lg border-morandi-border bg-gray-100 p-2.5 text-sm outline-none cursor-not-allowed"
                                 value={formData.checker}
-                                onChange={(e) => handleChange('checker', e.target.value)}
-                                required
+                                readOnly
+                                disabled
                             />
                         </div>
                         <div>
@@ -140,39 +186,51 @@ export default function CheckForm({ systems, onSuccess }) {
                             animate={{ height: 'auto', opacity: 1 }}
                             overflow="hidden"
                         >
-                            <label className="block text-sm font-medium text-morandi-text mb-1">代理人姓名</label>
-                            <input
-                                type="text"
-                                className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none"
-                                value={formData.deputyName}
-                                onChange={(e) => handleChange('deputyName', e.target.value)}
-                                required={formData.isDeputy}
-                            />
+                            <label className="block text-sm font-medium text-morandi-text mb-1">代理人</label>
+                            {getDeputyOptions().length > 0 ? (
+                                <select
+                                    className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none"
+                                    value={formData.deputyName}
+                                    onChange={(e) => handleChange('deputyName', e.target.value)}
+                                    required={formData.isDeputy}
+                                >
+                                    <option value="">請選擇代理人...</option>
+                                    {getDeputyOptions().map(deputy => (
+                                        <option key={deputy} value={deputy}>{deputy}</option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    type="text"
+                                    className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none"
+                                    value={formData.deputyName}
+                                    onChange={(e) => handleChange('deputyName', e.target.value)}
+                                    placeholder="請輸入代理人姓名"
+                                    required={formData.isDeputy}
+                                />
+                            )}
                         </motion.div>
                     )}
                 </div>
 
-                {/* Checklist */}
-                <div className="space-y-1">
-                    <CheckItem id="ED01" label="檢查 AP/DB Server 是否運作中" value={formData.ED01} onChange={handleChange} />
-                    <CheckItem id="EM01" label="Windows Update 安裝與防毒更新確認" value={formData.EM01} onChange={handleChange} />
-                    <CheckItem id="EY01" label="系統管理帳號密碼 Review 與變更" value={formData.EY01} onChange={handleChange} />
-                    <CheckItem id="ED02" label="檢查 AP、DB 備份是否完成" value={formData.ED02} onChange={handleChange} />
-                    <CheckItem id="EM02" label="CPU/記憶體效能檢查" value={formData.EM02} onChange={handleChange} />
-                    <CheckItem id="EY02" label="清查應用系統權限，並製作權限報表" value={formData.EY02} onChange={handleChange} />
-                    <CheckItem id="ED03" label="檢查主機硬碟空間是否足夠" value={formData.ED03} onChange={handleChange} />
-                    <CheckItem id="EY03" label="系統還原演練" value={formData.EY03} onChange={handleChange} />
-                    <CheckItem id="ED04" label="檢查 File Server 空間是否足夠" value={formData.ED04} onChange={handleChange} />
-                </div>
-
-                {/* Other */}
-                <div>
-                    <label className="block text-sm font-medium text-morandi-text mb-1"><span className="text-morandi-primary font-bold mr-2">OT01</span>其它異常說明 (選填)</label>
-                    <textarea
-                        className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none h-20 resize-none"
-                        value={formData.OT01}
-                        onChange={(e) => handleChange('OT01', e.target.value)}
-                    />
+                {/* Checklist - Grouped by Category */}
+                <div className="space-y-4">
+                    {Object.entries(groupedItems).map(([category, items]) => (
+                        <div key={category} className="bg-white p-4 rounded-xl border border-morandi-border">
+                            <h3 className="text-sm font-bold text-morandi-primary mb-3 uppercase">{category}</h3>
+                            <div className="space-y-2">
+                                {items.map(item => (
+                                    <CheckItem
+                                        key={item.id}
+                                        id={item.id}
+                                        label={item.description}
+                                        value={formData[item.id] || ''}
+                                        onChange={handleChange}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
                 </div>
 
                 <button

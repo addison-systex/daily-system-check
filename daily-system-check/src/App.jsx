@@ -7,24 +7,42 @@ function App() {
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [systems, setSystems] = useState([]);
+    const [checkItems, setCheckItems] = useState([]);
 
     useEffect(() => {
-        const fetchSystems = async () => {
+        const fetchConfig = () => {
             try {
-                const response = await fetch(import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                setSystems(data);
+                const callbackName = 'jsonpCallback_' + Date.now();
+                const script = document.createElement('script');
+                const url = import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL;
+
+                window[callbackName] = (data) => {
+                    setSystems(data.systems || []);
+                    setCheckItems(data.checkItems || []);
+                    setLoading(false);
+                    delete window[callbackName];
+                    document.body.removeChild(script);
+                };
+
+                script.onerror = () => {
+                    console.error("Error loading config");
+                    alert("無法讀取系統設定，請確認網路連線或稍後再試。");
+                    setLoading(false);
+                    delete window[callbackName];
+                    if (script.parentNode) document.body.removeChild(script);
+                };
+
+                script.src = `${url}?callback=${callbackName}`;
+                document.body.appendChild(script);
+
             } catch (error) {
-                console.error("Error fetching systems:", error);
-                // Fallback or alert user
-                alert("無法讀取系統清單，請確認網路連線或稍後再試。");
-            } finally {
+                console.error("Error fetching config:", error);
+                alert("無法讀取系統設定，請確認網路連線或稍後再試。");
                 setLoading(false);
             }
         };
 
-        fetchSystems();
+        fetchConfig();
     }, []);
 
     return (
@@ -39,7 +57,12 @@ function App() {
                         {submitted ? (
                             <SuccessScreen key="success" onReset={() => setSubmitted(false)} />
                         ) : (
-                            <CheckForm key="form" systems={systems} onSuccess={() => setSubmitted(true)} />
+                            <CheckForm
+                                key="form"
+                                systems={systems}
+                                checkItems={checkItems}
+                                onSuccess={() => setSubmitted(true)}
+                            />
                         )}
                     </AnimatePresence>
                 )}
