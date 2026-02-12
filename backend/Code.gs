@@ -202,9 +202,51 @@ function sendMorningTrigger() {
   const baseUrl = "https://addison-systex.github.io/daily-system-check";
   
   systems.forEach(sys => {
-    const systemUrl = `${baseUrl}/${encodeURIComponent(sys.name)}`;
-    const message = `早安！請進行今日的系統檢核：\n系統：${sys.name}\n負責人：${sys.owner}\n<${systemUrl}|立即檢核>`;
-    sendSlackMessage(sys.channelId, message);
+    // 使用 query parameter 避免 GitHub Pages 404
+    const systemUrl = `${baseUrl}/?system=${encodeURIComponent(sys.name)}`;
+    const text = `早安！請進行今日(${sys.name})的系統檢核`;
+    
+    const blocks = [
+      {
+        "type": "header",
+        "text": {
+          "type": "plain_text",
+          "text": "🌅 每日系統檢核通知",
+          "emoji": true
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": `*系統名稱:*\n${sys.name}`
+          },
+          {
+            "type": "mrkdwn",
+            "text": `*負責人:*\n${sys.owner}`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "text": "立即前往檢核",
+              "emoji": true
+            },
+            "value": "check",
+            "url": systemUrl,
+            "style": "primary"
+          }
+        ]
+      }
+    ];
+
+    sendSlackMessage(sys.channelId, text, blocks);
   });
 }
 
@@ -232,9 +274,45 @@ function sendAfternoonTrigger() {
     }
     
     if (!checked) {
-      const systemUrl = `${baseUrl}/${encodeURIComponent(sys.name)}`;
-      const message = `[提醒] ${sys.name} 尚未收到今日的系統檢核回報，請盡速完成！\n<${systemUrl}|立即檢核>`;
-      sendSlackMessage(sys.channelId, message);
+      // 使用 query parameter 避免 GitHub Pages 404
+      const systemUrl = `${baseUrl}/?system=${encodeURIComponent(sys.name)}`;
+      const text = `[提醒] ${sys.name} 尚未收到今日的系統檢核回報`;
+      
+      const blocks = [
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "⚠️ 系統檢核未完成提醒",
+            "emoji": true
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": `*${sys.name}* 尚未收到今日(${today})的系統檢核回報，請盡速完成回報作業。`
+          }
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "立即前往補填",
+                "emoji": true
+              },
+              "value": "check_urgent",
+              "url": systemUrl,
+              "style": "danger"
+            }
+          ]
+        }
+      ];
+
+      sendSlackMessage(sys.channelId, text, blocks);
     }
   });
 }
@@ -301,7 +379,7 @@ function markUnreported() {
   });
 }
 
-function sendSlackMessage(channelId, text) {
+function sendSlackMessage(channelId, text, blocks) {
   const slackToken = PropertiesService.getScriptProperties().getProperty('SLACK_TOKEN');
   
   if (!slackToken) {
@@ -314,6 +392,10 @@ function sendSlackMessage(channelId, text) {
     channel: channelId,
     text: text
   };
+  
+  if (blocks) {
+    payload.blocks = blocks;
+  }
   
   const options = {
     method: 'post',

@@ -11,13 +11,21 @@ function App() {
     const [prefilledSystem, setPrefilledSystem] = useState(null);
 
     useEffect(() => {
-        // 從 URL 路徑讀取系統名稱 (例如: /daily-system-check/ARRMS)
-        const pathParts = window.location.pathname.split('/').filter(Boolean);
-        const systemNameFromUrl = pathParts[pathParts.length - 1];
+        // 從 URL Query Parameter 讀取系統名稱 (例如: /?system=ARRMS)
+        // 這是 GitHub Pages 的最佳實踐,避免 404 錯誤
+        const params = new URLSearchParams(window.location.search);
+        const systemFromQuery = params.get('system');
 
-        // 如果不是根路徑且不是 index.html,就當作系統名稱
-        if (systemNameFromUrl && systemNameFromUrl !== 'daily-system-check' && !systemNameFromUrl.endsWith('.html')) {
-            setPrefilledSystem(decodeURIComponent(systemNameFromUrl));
+        if (systemFromQuery) {
+            setPrefilledSystem(decodeURIComponent(systemFromQuery));
+        } else {
+            // Fallback: 嘗試從路徑讀取 (保留舊邏輯)
+            const pathParts = window.location.pathname.split('/').filter(Boolean);
+            const systemNameFromUrl = pathParts[pathParts.length - 1];
+
+            if (systemNameFromUrl && systemNameFromUrl !== 'daily-system-check' && !systemNameFromUrl.endsWith('.html')) {
+                setPrefilledSystem(decodeURIComponent(systemNameFromUrl));
+            }
         }
 
         const fetchConfig = () => {
