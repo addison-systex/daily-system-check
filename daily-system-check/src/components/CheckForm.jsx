@@ -9,8 +9,8 @@ const CheckItem = ({ id, label, value, onChange }) => {
         <div className="space-y-2">
             <div
                 className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer ${isYes ? 'bg-green-50 border-2 border-green-400' :
-                        isNo ? 'bg-red-50 border-2 border-red-400' :
-                            'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
+                    isNo ? 'bg-red-50 border-2 border-red-400' :
+                        'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
                     }`}
             >
                 <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
@@ -62,7 +62,8 @@ const CheckItem = ({ id, label, value, onChange }) => {
 
 // 「其他」項目使用 checkbox
 const OtherItem = ({ id, label, value, onChange }) => {
-    const isChecked = !!value;
+    // value 為 null/undefined 時表示未勾選,否則表示已勾選
+    const isChecked = value !== null && value !== undefined;
 
     return (
         <div className="space-y-2">
