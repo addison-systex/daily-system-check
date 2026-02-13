@@ -65,6 +65,8 @@ const OtherItem = ({ id, label, value, onChange }) => {
     // value 為 null/undefined 時表示未勾選,否則表示已勾選
     const isChecked = value !== null && value !== undefined;
 
+    console.log(`OtherItem ${id}:`, { value, isChecked });
+
     return (
         <div className="space-y-2">
             <div
@@ -80,11 +82,20 @@ const OtherItem = ({ id, label, value, onChange }) => {
                 <label
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${isChecked ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 hover:bg-blue-100'
                         }`}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        const newValue = isChecked ? null : '';
+                        console.log(`Checkbox clicked, changing from ${value} to ${newValue}`);
+                        onChange(id, newValue);
+                    }}
                 >
                     <input
                         type="checkbox"
                         checked={isChecked}
-                        onChange={(e) => onChange(id, e.target.checked ? '' : null)}
+                        onChange={(e) => {
+                            console.log('Checkbox onChange:', e.target.checked);
+                            onChange(id, e.target.checked ? '' : null);
+                        }}
                         className="form-checkbox text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"
                     />
                     <span className="text-sm font-medium">有其他事項</span>
