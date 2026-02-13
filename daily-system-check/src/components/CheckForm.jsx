@@ -9,8 +9,8 @@ const CheckItem = ({ id, label, value, onChange }) => {
         <div className="space-y-2">
             <div
                 className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer ${isYes ? 'bg-green-50 border-2 border-green-400' :
-                        isNo ? 'bg-red-50 border-2 border-red-400' :
-                            'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
+                    isNo ? 'bg-red-50 border-2 border-red-400' :
+                        'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
                     }`}
             >
                 <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
@@ -68,7 +68,7 @@ const OtherItem = ({ id, label, value, onChange }) => {
         <div className="space-y-2">
             <div
                 className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 ${isChecked ? 'bg-morandi-primary/10 border-2 border-morandi-primary' :
-                        'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
+                    'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
                     }`}
             >
                 <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
@@ -118,7 +118,7 @@ const OtherItem = ({ id, label, value, onChange }) => {
     );
 };
 
-export default function CheckForm({ systems, checkItems, prefilledSystem, onSuccess }) {
+export default function CheckForm({ systems, checkItems, prefilledSystem, initialTodayStatus, onSuccess }) {
     const [formData, setFormData] = useState({
         systemName: '',
         checker: '',
@@ -128,36 +128,43 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
 
     const [selectedSystem, setSelectedSystem] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [todayStatus, setTodayStatus] = useState(null);
+    const [todayStatus, setTodayStatus] = useState(initialTodayStatus || null);
     const [checkingStatus, setCheckingStatus] = useState(false);
 
-    // 當選擇系統時,自動帶入負責人並檢查今日狀態
-    useEffect(() => {
-        if (formData.systemName) {
-            const system = systems.find(s => s.name === formData.systemName);
-            if (system) {
-                setSelectedSystem(system);
-                setFormData(prev => ({
-                    ...prev,
-                    checker: system.owner
-                }));
-                checkTodayStatus(formData.systemName);
-            }
-        }
-    }, [formData.systemName, systems]);
-
-    // 從 URL 預填系統名稱
+    // 從 URL 預填系統名稱 (僅在組件首掛載時執行)
     useEffect(() => {
         if (prefilledSystem && systems.length > 0) {
             const system = systems.find(s => s.name === prefilledSystem);
             if (system) {
                 setFormData(prev => ({
                     ...prev,
-                    systemName: system.name
+                    systemName: system.name,
+                    checker: system.owner
                 }));
+                setSelectedSystem(system);
             }
         }
     }, [prefilledSystem, systems]);
+
+    // 處理手動選擇系統
+    const handleSystemChange = (systemName) => {
+        const system = systems.find(s => s.name === systemName);
+        if (system) {
+            setSelectedSystem(system);
+            setFormData(prev => ({
+                ...prev,
+                systemName: system.name,
+                checker: system.owner
+            }));
+
+            // 只有手動切換且不是預填時, 才在組件內觸發 loading
+            checkTodayStatus(systemName);
+        } else {
+            setFormData(prev => ({ ...prev, systemName: '', checker: '' }));
+            setSelectedSystem(null);
+            setTodayStatus(null);
+        }
+    };
 
     // 當勾選代理人時,自動帶入代理人
     useEffect(() => {
@@ -228,18 +235,13 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
     const isFormValid = formData.systemName && formData.checker && checkItems.every(item => {
         const isOther = item.id.startsWith('OT');
         const val = formData[item.id];
-
         if (isOther) {
-            // 如果其他有勾選 (不是 null), 則說明欄位必須有值
-            if (val !== null && val !== undefined) {
-                return val.trim().length > 0;
-            }
-            return true; // 沒勾選也算 valid
+            if (val !== null && val !== undefined) return val.trim().length > 0;
+            return true;
         }
-        return val === 'Y' || val === 'N'; // 一般項目必須填 Y/N
+        return val === 'Y' || val === 'N';
     });
 
-    // 按 ID 前兩碼分區塊
     const groupedItems = checkItems.reduce((acc, item) => {
         const prefix = item.id.substring(0, 2);
         if (!acc[prefix]) acc[prefix] = [];
@@ -247,7 +249,6 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         return acc;
     }, {});
 
-    // 獲取代理人選項
     const getDeputyOptions = () => {
         if (!selectedSystem) return [];
         const options = [];
@@ -258,10 +259,10 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
 
     if (checkingStatus) {
         return (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 space-y-4">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-morandi-primary mx-auto"></div>
-                <p className="text-morandi-muted font-medium">確認報表狀態中...</p>
-            </motion.div>
+            <div className="flex flex-col justify-center items-center h-64 space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-morandi-primary"></div>
+                <p className="text-morandi-muted text-sm animate-pulse font-medium">更新檢核能量中...</p>
+            </div>
         );
     }
 
@@ -297,7 +298,7 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
                         <select
                             className="w-full rounded-xl border-morandi-border bg-white p-3 text-sm focus:ring-2 focus:ring-morandi-primary outline-none shadow-sm"
                             value={formData.systemName}
-                            onChange={(e) => handleChange('systemName', e.target.value)}
+                            onChange={(e) => handleSystemChange(e.target.value)}
                             required
                         >
                             <option value="">請選擇欲檢核的系統...</option>
