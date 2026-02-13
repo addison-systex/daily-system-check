@@ -299,10 +299,10 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
     const getGroupTheme = (prefix) => {
         const themes = {
             'ED': {
-                border: 'border-blue-200',
-                accent: 'bg-blue-400',
-                bg: 'bg-blue-50/40',
-                shadow: 'shadow-blue-900/5'
+                border: 'border-indigo-200',
+                accent: 'bg-indigo-400',
+                bg: 'bg-indigo-50/40',
+                shadow: 'shadow-indigo-900/5'
             },
             'EM': {
                 border: 'border-emerald-200',
@@ -317,10 +317,10 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
                 shadow: 'shadow-orange-900/5'
             },
             'OT': {
-                border: 'border-purple-200',
-                accent: 'bg-purple-400',
-                bg: 'bg-purple-50/40',
-                shadow: 'shadow-purple-900/5'
+                border: 'border-indigo-200',
+                accent: 'bg-indigo-400',
+                bg: 'bg-indigo-50/40',
+                shadow: 'shadow-indigo-900/5'
             }
         };
         return themes[prefix] || {
