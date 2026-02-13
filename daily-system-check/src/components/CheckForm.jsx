@@ -361,15 +361,22 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
                                 <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" /></svg>
                                 Target System
                             </label>
-                            <select
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 text-sm font-bold text-slate-700 focus:border-slate-300 focus:bg-white outline-none transition-all cursor-pointer shadow-sm"
-                                value={formData.systemName}
-                                onChange={(e) => handleSystemChange(e.target.value)}
-                                required
-                            >
-                                <option value="">請選取欲報告之系統...</option>
-                                {systems.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
-                            </select>
+                            <div className="relative">
+                                <select
+                                    className="w-full rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 pr-10 text-base font-bold text-slate-800 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 outline-none transition-all cursor-pointer shadow-sm hover:shadow-md appearance-none"
+                                    value={formData.systemName}
+                                    onChange={(e) => handleSystemChange(e.target.value)}
+                                    required
+                                >
+                                    <option value="" className="text-slate-400">請選取欲報告之系統...</option>
+                                    {systems.map(s => <option key={s.name} value={s.name} className="text-slate-800 font-bold">{s.name}</option>)}
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
 
                         {/* 責任人資訊卡 */}
