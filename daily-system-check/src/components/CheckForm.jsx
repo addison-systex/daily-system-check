@@ -14,7 +14,7 @@ const CheckItem = ({ id, label, value, onChange }) => {
             <button
                 type="button"
                 onClick={onClick}
-                className={`flex items-center space-x-2 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all duration-200 active:translate-y-0 active:shadow-none ${active ? activeClass : 'bg-gray-50 text-slate-400 hover:bg-gray-100 hover:text-slate-500 border border-gray-200 shadow-sm'
+                className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 active:translate-y-0 active:shadow-none ${active ? activeClass : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-500 border border-slate-200 shadow-sm'
                     }`}
             >
                 {active && (
@@ -32,12 +32,12 @@ const CheckItem = ({ id, label, value, onChange }) => {
     return (
         <motion.div
             whileHover={{ y: -2 }}
-            className={`group p-5 rounded-[2rem] transition-all duration-300 bg-white border-2 border-transparent hover:border-morandi-primary/20 hover:shadow-xl ${(isYes || isNo) ? 'bg-white shadow-md' : 'bg-white/50'
+            className={`group p-5 rounded-2xl transition-all duration-300 bg-white/80 backdrop-blur-sm border border-slate-100 hover:border-slate-200 hover:shadow-lg ${(isYes || isNo) ? 'shadow-md' : 'shadow-sm'
                 }`}
         >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-start space-x-3">
-                    <span className="mt-1 px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] font-black text-slate-400 tracking-tighter">
+                    <span className="mt-1 px-2.5 py-1 bg-slate-900 rounded-lg text-[9px] font-black text-white tracking-wider">
                         {id}
                     </span>
                     <h4 className="text-[15px] font-bold text-slate-700 leading-snug group-hover:text-slate-900 transition-colors">
@@ -62,35 +62,35 @@ const OtherItem = ({ id, label, value, onChange }) => {
         <div className="space-y-4">
             <motion.div
                 whileHover={{ y: -2 }}
-                className={`p-5 rounded-[2rem] bg-white border-2 transition-all duration-300 shadow-sm ${isChecked ? 'border-morandi-primary ring-4 ring-morandi-primary/5' : 'border-transparent hover:border-gray-200'
+                className={`p-5 rounded-2xl bg-white/80 backdrop-blur-sm border transition-all duration-300 shadow-sm ${isChecked ? 'border-indigo-200 ring-2 ring-indigo-100 shadow-md' : 'border-slate-100 hover:border-slate-200'
                     }`}
             >
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                        <span className="px-2 py-0.5 bg-indigo-50 rounded-lg text-[10px] font-black text-indigo-400 tracking-tighter">
+                        <span className="px-2.5 py-1 bg-indigo-500 rounded-lg text-[9px] font-black text-white tracking-wider">
                             {id}
                         </span>
                         <div>
                             <h4 className="text-[15px] font-bold text-slate-800">{label}</h4>
-                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">Optional Protocol</p>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Optional Protocol</p>
                         </div>
                     </div>
 
                     <button
                         type="button"
                         onClick={(e) => { e.preventDefault(); onChange(id, isChecked ? null : ''); }}
-                        className={`relative w-16 h-10 rounded-full transition-all duration-500 overflow-hidden ${isChecked ? 'bg-morandi-primary' : 'bg-slate-100 hover:bg-slate-200'
+                        className={`relative w-14 h-8 rounded-full transition-all duration-500 overflow-hidden ${isChecked ? 'bg-indigo-500' : 'bg-slate-100 hover:bg-slate-200'
                             }`}
                     >
                         <motion.div
                             initial={false}
-                            animate={{ x: isChecked ? 28 : 6 }}
-                            className="w-7 h-7 bg-white rounded-full shadow-lg flex items-center justify-center"
+                            animate={{ x: isChecked ? 26 : 4 }}
+                            className="w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center"
                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
                         >
                             {isChecked && (
                                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                                    <svg className="w-4 h-4 text-morandi-primary" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg className="w-3 h-3 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                     </svg>
                                 </motion.div>
@@ -103,7 +103,7 @@ const OtherItem = ({ id, label, value, onChange }) => {
                     {isChecked && (
                         <motion.div
                             initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                            animate={{ height: 'auto', opacity: 1, marginTop: 20 }}
+                            animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
                             exit={{ height: 0, opacity: 0, marginTop: 0 }}
                             className="overflow-hidden"
                         >
@@ -113,9 +113,9 @@ const OtherItem = ({ id, label, value, onChange }) => {
                                     value={value || ''}
                                     onChange={(e) => onChange(id, e.target.value)}
                                     required
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-sm focus:outline-none focus:border-morandi-primary/30 transition-all min-h-[100px] shadow-inner"
+                                    className="w-full bg-slate-50/50 border-2 border-slate-100 rounded-2xl p-4 text-sm focus:outline-none focus:border-indigo-200 transition-all min-h-[100px] shadow-inner"
                                 />
-                                <div className="absolute top-4 right-4 animate-pulse">
+                                <div className="absolute top-3 right-3 animate-pulse">
                                     <span className="inline-block w-2 h-2 rounded-full bg-rose-400"></span>
                                 </div>
                             </div>
@@ -341,31 +341,28 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
             <form onSubmit={handleSubmit} className="space-y-8">
                 {/* 系統選擇區塊 - 採更簡約的設計 */}
                 {/* --- 基本資訊與身分識別區塊 --- */}
-                <div className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-white shadow-xl space-y-8 relative overflow-hidden text-left">
-                    {/* 背景微裝飾 */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-morandi-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-
-                    <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
-                        <div className="p-2 bg-slate-900 rounded-xl">
-                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-100 shadow-md space-y-6">
+                    <div className="flex items-center space-x-3 pb-3 border-b border-slate-100">
+                        <div className="p-2 bg-slate-900 rounded-lg">
+                            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Protocol Specs</h2>
-                            <p className="text-lg font-bold text-slate-800">基本資訊識別</p>
+                            <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">Protocol Specs</h2>
+                            <p className="text-base font-bold text-slate-800">基本資訊識別</p>
                         </div>
                     </div>
 
-                    <div className="space-y-6 text-left">
+                    <div className="space-y-5">
                         {/* 系統選取 */}
                         <div className="space-y-2">
-                            <label className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider flex items-center">
+                            <label className="text-[10px] font-bold text-slate-500 ml-1 uppercase tracking-wider flex items-center">
                                 <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" /></svg>
                                 Target System
                             </label>
                             <select
-                                className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50/50 p-4 text-[15px] font-bold text-slate-700 focus:border-morandi-primary focus:bg-white outline-none transition-all cursor-pointer shadow-inner"
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 text-sm font-bold text-slate-700 focus:border-slate-300 focus:bg-white outline-none transition-all cursor-pointer shadow-sm"
                                 value={formData.systemName}
                                 onChange={(e) => handleSystemChange(e.target.value)}
                                 required
@@ -381,32 +378,32 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
                                 <motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}
-                                    className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"
+                                    className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1"
                                 >
                                     {/* 責任人顯示 */}
-                                    <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-lg">
-                                        <div className="flex items-center space-x-3">
-                                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg">👤</div>
+                                    <div className="p-3.5 rounded-xl bg-slate-900 text-white flex items-center shadow-md">
+                                        <div className="flex items-center space-x-2.5">
+                                            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-base">👤</div>
                                             <div>
-                                                <p className="text-[9px] font-bold text-white/50 uppercase tracking-widest">Owner</p>
-                                                <p className="text-md font-bold text-white">{formData.checker}</p>
+                                                <p className="text-[8px] font-bold text-white/50 uppercase tracking-widest">Owner</p>
+                                                <p className="text-sm font-bold text-white">{formData.checker}</p>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* 身分切換器 (替代原本的 Checkbox) */}
-                                    <div className="flex p-1 bg-slate-100 rounded-2xl">
+                                    {/* 身分切換器 */}
+                                    <div className="flex p-1 bg-slate-100 rounded-xl">
                                         <button
                                             type="button"
                                             onClick={() => handleChange('isDeputy', false)}
-                                            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!formData.isDeputy ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 opacity-60'}`}
+                                            className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${!formData.isDeputy ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 opacity-60'}`}
                                         >
                                             本人報表
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleChange('isDeputy', true)}
-                                            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${formData.isDeputy ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-400 opacity-60'}`}
+                                            className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all ${formData.isDeputy ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 opacity-60'}`}
                                         >
                                             代理檢核
                                         </button>
@@ -422,9 +419,9 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden bg-indigo-50/50 p-5 rounded-3xl border-2 border-indigo-100 border-dashed"
+                                    className="overflow-hidden bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100"
                                 >
-                                    <span className="text-[10px] font-black text-indigo-400 uppercase ml-1 mb-2 block tracking-[0.2em]">Assign Agent Identity</span>
+                                    <span className="text-[9px] font-black text-indigo-400 uppercase ml-1 mb-2 block tracking-[0.2em]">Assign Agent Identity</span>
                                     {getDeputyOptions().length > 0 ? (
                                         <div className="grid grid-cols-2 gap-2">
                                             {getDeputyOptions().map(deputy => (
@@ -432,9 +429,9 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
                                                     key={deputy}
                                                     type="button"
                                                     onClick={() => handleChange('deputyName', deputy)}
-                                                    className={`p-3 rounded-xl border-2 text-sm font-bold transition-all ${formData.deputyName === deputy
-                                                            ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
-                                                            : 'bg-white border-transparent text-slate-600 hover:border-indigo-200 shadow-sm'
+                                                    className={`p-2.5 rounded-lg border text-xs font-bold transition-all ${formData.deputyName === deputy
+                                                        ? 'bg-indigo-500 border-indigo-500 text-white shadow-sm'
+                                                        : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-200 shadow-sm'
                                                         }`}
                                                 >
                                                     {deputy}
@@ -444,7 +441,7 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
                                     ) : (
                                         <input
                                             type="text"
-                                            className="w-full rounded-2xl border-2 border-indigo-100 bg-white p-4 text-sm font-bold text-slate-700 focus:border-indigo-400 outline-none shadow-sm transition-all"
+                                            className="w-full rounded-xl border border-indigo-200 bg-white p-3 text-sm font-bold text-slate-700 focus:border-indigo-300 outline-none shadow-sm transition-all"
                                             value={formData.deputyName}
                                             onChange={(e) => handleChange('deputyName', e.target.value)}
                                             placeholder="請輸入代理人姓名..."
