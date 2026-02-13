@@ -235,6 +235,20 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
     console.log('當前 todayStatus:', todayStatus);
     console.log('checkingStatus:', checkingStatus);
 
+    // 正在檢查今日狀態時,顯示 Loading
+    if (checkingStatus) {
+        return (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12 space-y-4"
+            >
+                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-morandi-primary mx-auto"></div>
+                <p className="text-morandi-muted">檢查今日檢核狀態...</p>
+            </motion.div>
+        );
+    }
+
     // 如果今日已完成,顯示提示
     if (todayStatus?.completed) {
         return (
