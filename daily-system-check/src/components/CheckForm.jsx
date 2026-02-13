@@ -138,6 +138,8 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
 
     // 檢查今日是否已完成
     const checkTodayStatus = (systemName) => {
+        console.log('=== 開始檢查今日狀態 ===');
+        console.log('系統名稱:', systemName);
         setCheckingStatus(true);
 
         const callbackName = 'checkTodayCallback_' + Date.now();
@@ -145,7 +147,7 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         const url = import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL;
 
         window[callbackName] = (data) => {
-            console.log('今日狀態檢查結果:', data);
+            console.log('✅ 今日狀態檢查結果:', data);
             setTodayStatus(data);
             setCheckingStatus(false);
             delete window[callbackName];
@@ -153,14 +155,16 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         };
 
         script.onerror = () => {
-            console.error('檢查今日狀態失敗');
+            console.error('❌ 檢查今日狀態失敗');
             setTodayStatus(null);
             setCheckingStatus(false);
             delete window[callbackName];
             if (script.parentNode) document.body.removeChild(script);
         };
 
-        script.src = `${url}?action=checkToday&system=${encodeURIComponent(systemName)}&callback=${callbackName}`;
+        const requestUrl = `${url}?action=checkToday&system=${encodeURIComponent(systemName)}&callback=${callbackName}`;
+        console.log('請求 URL:', requestUrl);
+        script.src = requestUrl;
         document.body.appendChild(script);
     };
 
@@ -219,6 +223,10 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         if (selectedSystem.generalDeputy) options.push(selectedSystem.generalDeputy);
         return [...new Set(options)]; // 去重
     };
+
+    // Debug: 追蹤 todayStatus 狀態
+    console.log('當前 todayStatus:', todayStatus);
+    console.log('checkingStatus:', checkingStatus);
 
     // 如果今日已完成,顯示提示
     if (todayStatus?.completed) {
