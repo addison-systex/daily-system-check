@@ -284,102 +284,162 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
         );
     }
 
+    // 莫蘭迪配色方案系統
+    const getGroupTheme = (prefix) => {
+        const themes = {
+            'ED': {
+                border: 'border-blue-200',
+                accent: 'bg-blue-400',
+                bg: 'bg-blue-50/40',
+                shadow: 'shadow-blue-900/5'
+            },
+            'EM': {
+                border: 'border-emerald-200',
+                accent: 'bg-emerald-400',
+                bg: 'bg-emerald-50/40',
+                shadow: 'shadow-emerald-900/5'
+            },
+            'EY': {
+                border: 'border-orange-200',
+                accent: 'bg-orange-400',
+                bg: 'bg-orange-50/40',
+                shadow: 'shadow-orange-900/5'
+            },
+            'OT': {
+                border: 'border-purple-200',
+                accent: 'bg-purple-400',
+                bg: 'bg-purple-50/40',
+                shadow: 'shadow-purple-900/5'
+            }
+        };
+        return themes[prefix] || {
+            border: 'border-gray-200',
+            accent: 'bg-gray-400',
+            bg: 'bg-gray-50/40',
+            shadow: 'shadow-gray-900/5'
+        };
+    };
+
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-morandi-text tracking-tight">每日系統檢核回報</h1>
-                <div className="h-1 w-12 bg-morandi-primary mx-auto mt-2 rounded-full"></div>
+            <div className="text-center mb-10">
+                <h1 className="text-3xl font-bold text-morandi-text tracking-tight mb-2">Daily System Report.</h1>
+                <p className="text-morandi-muted text-sm uppercase tracking-[0.2em] font-medium opacity-60">每日系統運行狀態檢核表</p>
+                <div className="h-1 w-12 bg-morandi-primary mx-auto mt-4 rounded-full opacity-30"></div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* 系統選擇區塊 - 採更簡約的設計 */}
+                <div className="bg-white/60 backdrop-blur-sm p-6 rounded-3xl border border-white shadow-sm space-y-6">
+                    <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-morandi-primary"></div>
+                        <h2 className="text-[10px] font-bold text-morandi-primary uppercase tracking-widest">Identify Target</h2>
+                    </div>
+
                     <div>
-                        <label className="block text-xs font-bold text-morandi-primary uppercase tracking-wider mb-2">系統選擇</label>
                         <select
-                            className="w-full rounded-xl border-morandi-border bg-white p-3 text-sm focus:ring-2 focus:ring-morandi-primary outline-none shadow-sm"
+                            className="w-full rounded-2xl border-morandi-border bg-white p-4 text-sm focus:ring-4 focus:ring-morandi-primary/10 outline-none shadow-sm transition-all cursor-pointer"
                             value={formData.systemName}
                             onChange={(e) => handleSystemChange(e.target.value)}
                             required
                         >
-                            <option value="">請選擇欲檢核的系統...</option>
+                            <option value="">請選取欲報告之系統...</option>
                             {systems.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
                         </select>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs font-bold text-morandi-primary uppercase tracking-wider mb-2">主要負責人</label>
-                            <input
-                                type="text"
-                                className="w-full rounded-xl border-morandi-border bg-gray-100 p-3 text-sm outline-none cursor-not-allowed opacity-70"
-                                value={formData.checker}
-                                readOnly
-                                disabled
-                            />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <span className="text-[10px] font-bold text-morandi-muted/60 uppercase ml-1">責任人</span>
+                            <div className="w-full rounded-2xl bg-gray-100/50 p-4 text-sm text-morandi-text opacity-70 border border-transparent">
+                                {formData.checker || "---"}
+                            </div>
                         </div>
-                        <div className="flex items-end pb-1">
-                            <label className="flex items-center space-x-3 cursor-pointer p-2 hover:bg-white rounded-lg transition-all">
+                        <div className="flex items-end">
+                            <label className="flex flex-1 items-center justify-between p-4 bg-white rounded-2xl border border-morandi-border hover:border-morandi-primary transition-all cursor-pointer shadow-sm group">
+                                <span className="text-sm font-medium text-morandi-text group-hover:text-morandi-primary">協助代理檢核</span>
                                 <input
                                     type="checkbox"
                                     checked={formData.isDeputy}
                                     onChange={(e) => handleChange('isDeputy', e.target.checked)}
-                                    className="w-5 h-5 rounded border-morandi-border text-morandi-primary focus:ring-morandi-primary"
+                                    className="w-5 h-5 rounded-lg border-morandi-border text-morandi-primary focus:ring-morandi-primary transition-all"
                                 />
-                                <span className="text-sm font-medium text-morandi-text">由代理人檢核</span>
                             </label>
                         </div>
                     </div>
 
-                    {formData.isDeputy && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
-                            <label className="block text-xs font-bold text-morandi-primary uppercase tracking-wider mb-2">代理人姓名</label>
-                            {getDeputyOptions().length > 0 ? (
-                                <select
-                                    className="w-full rounded-xl border-morandi-border bg-white p-3 text-sm focus:ring-2 focus:ring-morandi-primary outline-none shadow-sm"
-                                    value={formData.deputyName}
-                                    onChange={(e) => handleChange('deputyName', e.target.value)}
-                                    required={formData.isDeputy}
-                                >
-                                    <option value="">請選擇人員...</option>
-                                    {getDeputyOptions().map(deputy => <option key={deputy} value={deputy}>{deputy}</option>)}
-                                </select>
-                            ) : (
-                                <input
-                                    type="text"
-                                    className="w-full rounded-xl border-morandi-border bg-white p-3 text-sm focus:ring-2 focus:ring-morandi-primary outline-none"
-                                    value={formData.deputyName}
-                                    onChange={(e) => handleChange('deputyName', e.target.value)}
-                                    placeholder="請輸入代理人姓名"
-                                    required={formData.isDeputy}
-                                />
-                            )}
-                        </motion.div>
+                    <AnimatePresence>
+                        {formData.isDeputy && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                                <div className="p-4 pt-0">
+                                    <span className="text-[10px] font-bold text-morandi-primary uppercase ml-1 mb-2 block tracking-widest">代理人身分</span>
+                                    {getDeputyOptions().length > 0 ? (
+                                        <select
+                                            className="w-full rounded-2xl border-morandi-primary/20 bg-white p-3 text-sm focus:ring-4 focus:ring-morandi-primary/10 outline-none shadow-sm transition-all"
+                                            value={formData.deputyName}
+                                            onChange={(e) => handleChange('deputyName', e.target.value)}
+                                            required={formData.isDeputy}
+                                        >
+                                            <option value="">選取您的姓名...</option>
+                                            {getDeputyOptions().map(deputy => <option key={deputy} value={deputy}>{deputy}</option>)}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            className="w-full rounded-2xl border-morandi-primary/20 bg-white p-3 text-sm focus:ring-4 focus:ring-morandi-primary/10 outline-none shadow-sm"
+                                            value={formData.deputyName}
+                                            onChange={(e) => handleChange('deputyName', e.target.value)}
+                                            placeholder="請輸入您的姓名"
+                                            required={formData.isDeputy}
+                                        />
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
+                {/* 分組檢核項目區塊 */}
+                <div className="space-y-8 mt-12 relative">
+                    {Object.entries(groupedItems).map(([prefix, items], idx) => {
+                        const theme = getGroupTheme(prefix);
+                        return (
+                            <div key={prefix} className={`relative p-5 rounded-[2.5rem] border ${theme.border} ${theme.bg} ${theme.shadow} transition-all duration-500`}>
+                                {/* 左側高級感辨識條 */}
+                                <div className={`absolute left-0 top-12 bottom-12 w-1 ${theme.accent} rounded-r-full shadow-[0_0_10px_rgba(0,0,0,0.05)]`}></div>
+
+                                <div className="space-y-4">
+                                    {items.map(item => {
+                                        const isOther = item.id.startsWith('OT');
+                                        return isOther ? (
+                                            <OtherItem key={item.id} id={item.id} label={item.description} value={formData[item.id]} onChange={handleChange} />
+                                        ) : (
+                                            <CheckItem key={item.id} id={item.id} label={item.description} value={formData[item.id] || ''} onChange={handleChange} />
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div className="pt-10">
+                    <button
+                        type="submit"
+                        disabled={!isFormValid || submitting}
+                        className={`w-full py-5 rounded-3xl text-white font-bold tracking-[0.2em] uppercase transition-all shadow-xl
+                        ${isFormValid && !submitting
+                                ? 'bg-morandi-text hover:bg-morandi-primary hover:-translate-y-1 active:translate-y-0.5 active:shadow-inner'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'}`}
+                    >
+                        {submitting ? 'Transmitting Data...' : 'Confirm and Submit'}
+                    </button>
+                    {!isFormValid && formData.systemName && (
+                        <p className="text-center text-[10px] text-morandi-muted font-bold mt-4 tracking-widest uppercase opacity-40 animate-pulse">
+                            Please complete all mandatory protocol fields
+                        </p>
                     )}
                 </div>
-
-                <div className="space-y-5">
-                    {Object.values(groupedItems).map((items, idx) => (
-                        <div key={idx} className="bg-white p-5 rounded-2xl border border-morandi-border shadow-sm space-y-4">
-                            {items.map(item => {
-                                const isOther = item.id.startsWith('OT');
-                                return isOther ? (
-                                    <OtherItem key={item.id} id={item.id} label={item.description} value={formData[item.id]} onChange={handleChange} />
-                                ) : (
-                                    <CheckItem key={item.id} id={item.id} label={item.description} value={formData[item.id] || ''} onChange={handleChange} />
-                                );
-                            })}
-                        </div>
-                    ))}
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={!isFormValid || submitting}
-                    className={`w-full py-4 rounded-xl text-white font-bold tracking-widest transition-all shadow-lg
-                    ${isFormValid && !submitting ? 'bg-morandi-primary hover:bg-slate-600 hover:-translate-y-0.5 active:translate-y-0' : 'bg-gray-300 cursor-not-allowed'}`}
-                >
-                    {submitting ? '資料上傳中...' : '送出今日回報'}
-                </button>
             </form>
         </motion.div>
     );
