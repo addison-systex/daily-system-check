@@ -381,12 +381,19 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
                                     className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1"
                                 >
                                     {/* 責任人顯示 */}
-                                    <div className="p-3.5 rounded-xl bg-slate-900 text-white flex items-center shadow-md">
-                                        <div className="flex items-center space-x-2.5">
-                                            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-base">👤</div>
-                                            <div>
-                                                <p className="text-[8px] font-bold text-white/50 uppercase tracking-widest">Owner</p>
-                                                <p className="text-sm font-bold text-white">{formData.checker}</p>
+                                    <div className="p-4 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white shadow-lg border-2 border-slate-700">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center space-x-2 mb-1">
+                                                    <span className="px-2 py-0.5 bg-emerald-500 rounded text-[8px] font-black uppercase tracking-wider">Owner</span>
+                                                    <span className="text-[8px] text-slate-400 font-bold">系統負責人</span>
+                                                </div>
+                                                <p className="text-xl font-black text-white tracking-tight">{formData.checker}</p>
+                                            </div>
+                                            <div className="w-12 h-12 rounded-lg bg-emerald-500/20 border-2 border-emerald-500/30 flex items-center justify-center">
+                                                <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
                                             </div>
                                         </div>
                                     </div>
