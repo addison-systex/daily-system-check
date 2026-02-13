@@ -1,43 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const CheckItem = ({ id, label, value, onChange }) => {
+const CheckItem = ({ id, label, value, onChange, isOther, otherNote, onOtherNoteChange }) => {
     const isYes = value === 'Y';
     const isNo = value === 'N';
 
     return (
-        <div className={`flex items-center justify-between py-3 px-4 rounded-lg transition-all duration-300 ${isYes ? 'bg-green-50 border-2 border-green-400' :
-            isNo ? 'bg-red-50 border-2 border-red-400' :
-                'bg-white border border-morandi-border hover:bg-gray-50'
-            }`}>
-            <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer" htmlFor={id}>
-                <span className="text-morandi-primary font-bold mr-2">{id}</span>
-                {label}
-            </label>
-            <div className="flex space-x-4">
-                <label className="flex items-center space-x-1 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={id}
-                        value="Y"
-                        checked={isYes}
-                        onChange={() => onChange(id, 'Y')}
-                        className="form-radio text-green-500 focus:ring-green-500 h-4 w-4"
-                    />
-                    <span className="text-sm font-medium">是</span>
+        <div className="space-y-2">
+            <div
+                className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer ${isYes ? 'bg-green-50 border-2 border-green-400' :
+                        isNo ? 'bg-red-50 border-2 border-red-400' :
+                            'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
+                    }`}
+            >
+                <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
+                    <span className="text-morandi-primary font-bold mr-2">{id}</span>
+                    {label}
+                    {isOther && <span className="text-morandi-muted text-xs ml-2">(非必填)</span>}
                 </label>
-                <label className="flex items-center space-x-1 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={id}
-                        value="N"
-                        checked={isNo}
-                        onChange={() => onChange(id, 'N')}
-                        className="form-radio text-red-500 focus:ring-red-500 h-4 w-4"
-                    />
-                    <span className="text-sm font-medium">否</span>
-                </label>
+                <div className="flex space-x-3">
+                    <label
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${isYes ? 'bg-green-500 text-white shadow-md' : 'bg-gray-100 hover:bg-green-100'
+                            }`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onChange(id, 'Y');
+                        }}
+                    >
+                        <input
+                            type="radio"
+                            name={id}
+                            value="Y"
+                            checked={isYes}
+                            onChange={() => onChange(id, 'Y')}
+                            className="form-radio text-green-500 focus:ring-green-500 h-4 w-4"
+                        />
+                        <span className="text-sm font-medium">是</span>
+                    </label>
+                    <label
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${isNo ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 hover:bg-red-100'
+                            }`}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onChange(id, 'N');
+                        }}
+                    >
+                        <input
+                            type="radio"
+                            name={id}
+                            value="N"
+                            checked={isNo}
+                            onChange={() => onChange(id, 'N')}
+                            className="form-radio text-red-500 focus:ring-red-500 h-4 w-4"
+                        />
+                        <span className="text-sm font-medium">否</span>
+                    </label>
+                </div>
             </div>
+
+            {/* 其他項目的說明欄位 */}
+            {isOther && (isYes || isNo) && (
+                <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    className="pl-4"
+                >
+                    <input
+                        type="text"
+                        placeholder="請輸入說明..."
+                        value={otherNote || ''}
+                        onChange={(e) => onOtherNoteChange(id, e.target.value)}
+                        className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none"
+                    />
+                </motion.div>
+            )}
         </div>
     );
 };
@@ -52,8 +88,10 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
 
     const [selectedSystem, setSelectedSystem] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [todayStatus, setTodayStatus] = useState(null); // { completed: boolean, checker: string }
+    const [checkingStatus, setCheckingStatus] = useState(false);
 
-    // 當選擇系統時,自動帶入負責人
+    // 當選擇系統時,自動帶入負責人並檢查今日狀態
     useEffect(() => {
         if (formData.systemName) {
             const system = systems.find(s => s.name === formData.systemName);
@@ -63,6 +101,9 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
                     ...prev,
                     checker: system.owner
                 }));
+
+                // 檢查今日是否已完成
+                checkTodayStatus(formData.systemName);
             }
         }
     }, [formData.systemName, systems]);
@@ -95,8 +136,29 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         }
     }, [formData.isDeputy, selectedSystem]);
 
+    // 檢查今日是否已完成
+    const checkTodayStatus = async (systemName) => {
+        setCheckingStatus(true);
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL}?action=checkToday&system=${encodeURIComponent(systemName)}`
+            );
+            const data = await response.json();
+            setTodayStatus(data);
+        } catch (error) {
+            console.error('檢查今日狀態失敗:', error);
+            setTodayStatus(null);
+        } finally {
+            setCheckingStatus(false);
+        }
+    };
+
     const handleChange = (id, value) => {
         setFormData(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleOtherNoteChange = (id, note) => {
+        setFormData(prev => ({ ...prev, [`${id}_note`]: note }));
     };
 
     const handleSubmit = async (e) => {
@@ -131,17 +193,12 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         }
     };
 
-    // 檢查所有檢核項目是否都已填寫
-    const allItemsFilled = checkItems.every(item => formData[item.id]);
+    // 檢查所有必填檢核項目是否都已填寫 (其他項目除外)
+    const allItemsFilled = checkItems.every(item => {
+        const isOther = item.id === 'OT01' || item.description.includes('其他');
+        return isOther || formData[item.id];
+    });
     const isFormValid = formData.systemName && formData.checker && allItemsFilled;
-
-    // 按項目編號前綴分組 (ED, EM, EY, etc.)
-    const groupedItems = checkItems.reduce((acc, item) => {
-        const prefix = item.id.match(/^[A-Z]+/)?.[0] || 'OTHER';
-        if (!acc[prefix]) acc[prefix] = [];
-        acc[prefix].push(item);
-        return acc;
-    }, {});
 
     // 獲取代理人選項
     const getDeputyOptions = () => {
@@ -151,6 +208,32 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         if (selectedSystem.generalDeputy) options.push(selectedSystem.generalDeputy);
         return [...new Set(options)]; // 去重
     };
+
+    // 如果今日已完成,顯示提示
+    if (todayStatus?.completed) {
+        return (
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-12 space-y-4"
+            >
+                <div className="text-6xl">✅</div>
+                <h2 className="text-2xl font-bold text-green-600">今日已完成檢核</h2>
+                <p className="text-morandi-text">
+                    檢核人：<span className="font-bold text-morandi-primary">{todayStatus.checker}</span>
+                </p>
+                <p className="text-morandi-muted text-sm">
+                    系統：{formData.systemName}
+                </p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="mt-4 px-6 py-2 bg-morandi-primary text-white rounded-lg hover:bg-slate-500 transition-all"
+                >
+                    重新整理
+                </button>
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div
@@ -238,24 +321,23 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
                     )}
                 </div>
 
-                {/* Checklist - Grouped by Category */}
-                <div className="space-y-4">
-                    {Object.entries(groupedItems).map(([category, items]) => (
-                        <div key={category} className="bg-white p-4 rounded-xl border border-morandi-border">
-                            <h3 className="text-sm font-bold text-morandi-primary mb-3 uppercase">{category}</h3>
-                            <div className="space-y-2">
-                                {items.map(item => (
-                                    <CheckItem
-                                        key={item.id}
-                                        id={item.id}
-                                        label={item.description}
-                                        value={formData[item.id] || ''}
-                                        onChange={handleChange}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                {/* Checklist - 不顯示分組標題 */}
+                <div className="bg-white p-4 rounded-xl border border-morandi-border space-y-3">
+                    {checkItems.map(item => {
+                        const isOther = item.id === 'OT01' || item.description.includes('其他');
+                        return (
+                            <CheckItem
+                                key={item.id}
+                                id={item.id}
+                                label={item.description}
+                                value={formData[item.id] || ''}
+                                onChange={handleChange}
+                                isOther={isOther}
+                                otherNote={formData[`${item.id}_note`]}
+                                onOtherNoteChange={handleOtherNoteChange}
+                            />
+                        );
+                    })}
                 </div>
 
                 <button

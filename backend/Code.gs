@@ -1,4 +1,4 @@
-const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // 若使用獨立腳本，請在此填入 Google Sheet ID
+const SPREADSHEET_ID = '12QJ2M-XRaARIkjpkIlbs1G3A90cbmM0alDnu5qVoWDU'; // 若使用獨立腳本，請在此填入 Google Sheet ID
 const CONFIG_SHEET_NAME = '系統基本資料';
 const CHECK_ITEMS_SHEET_NAME = '系統檢查項目';
 const REPORT_SHEET_NAME = '每日系統檢核表回報';
@@ -18,6 +18,44 @@ function getSpreadsheet() {
  * Serves the configuration data for the frontend.
  */
 function doGet(e) {
+  const action = e.parameter.action;
+  
+  // 檢查今日是否已完成
+  if (action === 'checkToday') {
+    const systemName = e.parameter.system;
+    if (!systemName) {
+      return ContentService.createTextOutput(JSON.stringify({ error: 'Missing system parameter' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    const ss = getSpreadsheet();
+    const sheet = ss.getSheetByName(systemName);
+    const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy/MM/dd');
+    
+    let completed = false;
+    let checker = '';
+    
+    if (sheet && sheet.getLastRow() > 1) {
+      const data = sheet.getDataRange().getValues();
+      // 從最後一行往前找
+      for (let i = data.length - 1; i >= 1; i--) {
+        const rowDate = Utilities.formatDate(new Date(data[i][0]), Session.getScriptTimeZone(), 'yyyy/MM/dd');
+        if (rowDate === today) {
+          completed = true;
+          // 檢核人在第3欄 (index 2)
+          checker = data[i][2] || '';
+          break;
+        }
+      }
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({ 
+      completed: completed,
+      checker: checker 
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // 原有的系統列表和檢查項目
   const systems = getSystemList();
   const checkItems = getCheckItems();
   const callback = e.parameter.callback;
@@ -123,7 +161,13 @@ function doPost(e) {
     
     // 加入目前檢查項目的值
     currentCheckItemIds.forEach(id => {
-      dataMap[id] = data[id] || '';
+      let value = data[id] || '';
+      // 如果有對應的 _note 欄位,附加說明
+      const noteKey = `${id}_note`;
+      if (data[noteKey]) {
+        value = value + (value ? ': ' : '') + data[noteKey];
+      }
+      dataMap[id] = value;
     });
     
     // 根據當前表頭順序組裝資料列 - 必須比對欄位名稱
@@ -216,17 +260,11 @@ function sendMorningTrigger() {
         }
       },
       {
-        "type": "section",
-        "fields": [
-          {
-            "type": "mrkdwn",
-            "text": `*系統名稱:*\n${sys.name}`
-          },
-          {
-            "type": "mrkdwn",
-            "text": `*負責人:*\n${sys.owner}`
-          }
-        ]
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": `*系統名稱:* ${sys.name} \n *負責人:* ${sys.owner} \n _(若負責人休假，請代理人填寫)_`
+            }
       },
       {
         "type": "actions",
@@ -412,3 +450,4 @@ function sendSlackMessage(channelId, text, blocks) {
     console.error('Error sending Slack message', e);
   }
 }
+
