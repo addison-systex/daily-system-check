@@ -8,10 +8,7 @@ const CheckItem = ({ id, label, value, onChange }) => {
     return (
         <div className="space-y-2">
             <div
-                className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer ${isYes ? 'bg-green-50 border-2 border-green-400' :
-                    isNo ? 'bg-red-50 border-2 border-red-400' :
-                        'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
-                    }`}
+                className="flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary"
             >
                 <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
                     <span className="text-morandi-primary font-bold mr-2">{id}</span>
@@ -67,9 +64,7 @@ const OtherItem = ({ id, label, value, onChange }) => {
     return (
         <div className="space-y-2">
             <div
-                className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 ${isChecked ? 'bg-morandi-primary/10 border-2 border-morandi-primary' :
-                    'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
-                    }`}
+                className="flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary"
             >
                 <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
                     <span className="text-morandi-primary font-bold mr-2">{id}</span>
