@@ -5,110 +5,124 @@ const CheckItem = ({ id, label, value, onChange }) => {
     const isYes = value === 'Y';
     const isNo = value === 'N';
 
-    return (
-        <div className="space-y-2">
-            <div
-                className="flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary"
+    const IconButton = ({ active, type, onClick, children }) => {
+        const activeClass = type === 'Y'
+            ? 'bg-emerald-500 text-white shadow-[0_4px_0_0_#059669] -translate-y-[2px]'
+            : 'bg-rose-500 text-white shadow-[0_4px_0_0_#be123c] -translate-y-[2px]';
+
+        return (
+            <button
+                type="button"
+                onClick={onClick}
+                className={`flex items-center space-x-2 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all duration-200 active:translate-y-0 active:shadow-none ${active ? activeClass : 'bg-gray-50 text-slate-400 hover:bg-gray-100 hover:text-slate-500 border border-gray-200 shadow-sm'
+                    }`}
             >
-                <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
-                    <span className="text-morandi-primary font-bold mr-2">{id}</span>
-                    {label}
-                </label>
-                <div className="flex space-x-3">
-                    <label
-                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${isYes ? 'bg-green-500 text-white shadow-md' : 'bg-gray-100 hover:bg-green-100'
-                            }`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onChange(id, 'Y');
-                        }}
-                    >
-                        <input
-                            type="radio"
-                            name={id}
-                            value="Y"
-                            checked={isYes}
-                            onChange={() => onChange(id, 'Y')}
-                            className="form-radio text-green-500 focus:ring-green-500 h-4 w-4"
-                        />
-                        <span className="text-sm font-medium">是</span>
-                    </label>
-                    <label
-                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${isNo ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 hover:bg-red-100'
-                            }`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onChange(id, 'N');
-                        }}
-                    >
-                        <input
-                            type="radio"
-                            name={id}
-                            value="N"
-                            checked={isNo}
-                            onChange={() => onChange(id, 'N')}
-                            className="form-radio text-red-500 focus:ring-red-500 h-4 w-4"
-                        />
-                        <span className="text-sm font-medium">否</span>
-                    </label>
+                {active && (
+                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </motion.span>
+                )}
+                <span>{children}</span>
+            </button>
+        );
+    };
+
+    return (
+        <motion.div
+            whileHover={{ y: -2 }}
+            className={`group p-5 rounded-[2rem] transition-all duration-300 bg-white border-2 border-transparent hover:border-morandi-primary/20 hover:shadow-xl ${(isYes || isNo) ? 'bg-white shadow-md' : 'bg-white/50'
+                }`}
+        >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start space-x-3">
+                    <span className="mt-1 px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] font-black text-slate-400 tracking-tighter">
+                        {id}
+                    </span>
+                    <h4 className="text-[15px] font-bold text-slate-700 leading-snug group-hover:text-slate-900 transition-colors">
+                        {label}
+                    </h4>
+                </div>
+
+                <div className="flex items-center space-x-3 self-end sm:self-auto">
+                    <IconButton active={isYes} type="Y" onClick={() => onChange(id, 'Y')}>是</IconButton>
+                    <IconButton active={isNo} type="N" onClick={() => onChange(id, 'N')}>否</IconButton>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
-// 「其他」項目使用 checkbox
+// 「其他」項目使用 checkbox 互動感優化
 const OtherItem = ({ id, label, value, onChange }) => {
     const isChecked = value !== null && value !== undefined;
 
     return (
-        <div className="space-y-2">
-            <div
-                className="flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary"
+        <div className="space-y-4">
+            <motion.div
+                whileHover={{ y: -2 }}
+                className={`p-5 rounded-[2rem] bg-white border-2 transition-all duration-300 shadow-sm ${isChecked ? 'border-morandi-primary ring-4 ring-morandi-primary/5' : 'border-transparent hover:border-gray-200'
+                    }`}
             >
-                <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
-                    <span className="text-morandi-primary font-bold mr-2">{id}</span>
-                    {label}
-                    <span className="text-morandi-muted text-xs ml-2">(選填)</span>
-                </label>
-                <label
-                    className={`flex items-center space-x-2 px-5 py-2 rounded-lg cursor-pointer transition-all ${isChecked ? 'bg-morandi-primary text-white shadow-md' : 'bg-gray-100 hover:bg-gray-200'
-                        }`}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        onChange(id, isChecked ? null : '');
-                    }}
-                >
-                    <input
-                        type="checkbox"
-                        checked={isChecked}
-                        readOnly
-                        className="form-checkbox text-white border-white focus:ring-white h-4 w-4 rounded"
-                    />
-                    <span className="text-sm font-bold">是</span>
-                </label>
-            </div>
-
-            {/* 勾選後顯示說明欄位 (必填) */}
-            {isChecked && (
-                <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    className="pl-4"
-                >
-                    <div className="flex items-center space-x-2">
-                        <div className="w-1 h-8 bg-morandi-primary rounded-full"></div>
-                        <input
-                            type="text"
-                            placeholder="請輸入說明 (必填)..."
-                            value={value || ''}
-                            onChange={(e) => onChange(id, e.target.value)}
-                            required
-                            className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none border-l-0 rounded-l-none"
-                        />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                        <span className="px-2 py-0.5 bg-indigo-50 rounded-lg text-[10px] font-black text-indigo-400 tracking-tighter">
+                            {id}
+                        </span>
+                        <div>
+                            <h4 className="text-[15px] font-bold text-slate-800">{label}</h4>
+                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest mt-0.5">Optional Protocol</p>
+                        </div>
                     </div>
-                </motion.div>
-            )}
+
+                    <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); onChange(id, isChecked ? null : ''); }}
+                        className={`relative w-16 h-10 rounded-full transition-all duration-500 overflow-hidden ${isChecked ? 'bg-morandi-primary' : 'bg-slate-100 hover:bg-slate-200'
+                            }`}
+                    >
+                        <motion.div
+                            initial={false}
+                            animate={{ x: isChecked ? 28 : 6 }}
+                            className="w-7 h-7 bg-white rounded-full shadow-lg flex items-center justify-center"
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        >
+                            {isChecked && (
+                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                                    <svg className="w-4 h-4 text-morandi-primary" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    </button>
+                </div>
+
+                <AnimatePresence>
+                    {isChecked && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                            animate={{ height: 'auto', opacity: 1, marginTop: 20 }}
+                            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="relative">
+                                <textarea
+                                    placeholder="請詳細輸入說明事項..."
+                                    value={value || ''}
+                                    onChange={(e) => onChange(id, e.target.value)}
+                                    required
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-5 text-sm focus:outline-none focus:border-morandi-primary/30 transition-all min-h-[100px] shadow-inner"
+                                />
+                                <div className="absolute top-4 right-4 animate-pulse">
+                                    <span className="inline-block w-2 h-2 rounded-full bg-rose-400"></span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
         </div>
     );
 };
