@@ -5,3 +5,30 @@
 body {
   @apply bg-morandi-bg text-morandi-text font-sans antialiased;
 }
+
+/* 自訂下拉選單選項樣式 */
+select option {
+  background-color: white;
+  color: #1e293b;
+  padding: 12px 16px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  color: #0f172a !important;
+}
+
+select option:disabled {
+  color: #94a3b8;
+  background-color: #f8fafc;
+}
+
+/* 第一個選項（placeholder）樣式 */
+select option[value=""] {
+  color: #94a3b8;
+  font-style: italic;
+}
