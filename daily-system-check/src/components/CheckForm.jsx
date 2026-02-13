@@ -93,8 +93,14 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
 
     // 當選擇系統時,自動帶入負責人並檢查今日狀態
     useEffect(() => {
+        console.log('🔍 系統選擇 useEffect 觸發');
+        console.log('formData.systemName:', formData.systemName);
+        console.log('systems.length:', systems.length);
+
         if (formData.systemName) {
             const system = systems.find(s => s.name === formData.systemName);
+            console.log('找到的系統:', system);
+
             if (system) {
                 setSelectedSystem(system);
                 setFormData(prev => ({
@@ -103,6 +109,7 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
                 }));
 
                 // 檢查今日是否已完成
+                console.log('準備呼叫 checkTodayStatus');
                 checkTodayStatus(formData.systemName);
             }
         }
