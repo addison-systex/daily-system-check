@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CheckItem = ({ id, label, value, onChange }) => {
     const isYes = value === 'Y';
@@ -242,7 +242,8 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
         return val === 'Y' || val === 'N';
     });
 
-    const groupedItems = checkItems.reduce((acc, item) => {
+    const groupedItems = (checkItems || []).reduce((acc, item) => {
+        if (!item || !item.id) return acc;
         const prefix = item.id.substring(0, 2);
         if (!acc[prefix]) acc[prefix] = [];
         acc[prefix].push(item);
