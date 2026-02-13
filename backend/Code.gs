@@ -23,8 +23,15 @@ function doGet(e) {
   // 檢查今日是否已完成
   if (action === 'checkToday') {
     const systemName = e.parameter.system;
+    const callback = e.parameter.callback;
+    
     if (!systemName) {
-      return ContentService.createTextOutput(JSON.stringify({ error: 'Missing system parameter' }))
+      const errorData = JSON.stringify({ error: 'Missing system parameter' });
+      if (callback) {
+        return ContentService.createTextOutput(callback + '(' + errorData + ')')
+          .setMimeType(ContentService.MimeType.JAVASCRIPT);
+      }
+      return ContentService.createTextOutput(errorData)
         .setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -49,10 +56,20 @@ function doGet(e) {
       }
     }
     
-    return ContentService.createTextOutput(JSON.stringify({ 
+    const resultData = JSON.stringify({ 
       completed: completed,
       checker: checker 
-    })).setMimeType(ContentService.MimeType.JSON);
+    });
+    
+    if (callback) {
+      // JSONP response
+      return ContentService.createTextOutput(callback + '(' + resultData + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      // Regular JSON response
+      return ContentService.createTextOutput(resultData)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
   
   // 原有的系統列表和檢查項目

@@ -9,8 +9,8 @@ const CheckItem = ({ id, label, value, onChange, isOther, otherNote, onOtherNote
         <div className="space-y-2">
             <div
                 className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer ${isYes ? 'bg-green-50 border-2 border-green-400' :
-                        isNo ? 'bg-red-50 border-2 border-red-400' :
-                            'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
+                    isNo ? 'bg-red-50 border-2 border-red-400' :
+                        'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
                     }`}
             >
                 <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
@@ -137,20 +137,31 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
     }, [formData.isDeputy, selectedSystem]);
 
     // 檢查今日是否已完成
-    const checkTodayStatus = async (systemName) => {
+    const checkTodayStatus = (systemName) => {
         setCheckingStatus(true);
-        try {
-            const response = await fetch(
-                `${import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL}?action=checkToday&system=${encodeURIComponent(systemName)}`
-            );
-            const data = await response.json();
+
+        const callbackName = 'checkTodayCallback_' + Date.now();
+        const script = document.createElement('script');
+        const url = import.meta.env.VITE_GOOGLE_APP_SCRIPT_URL;
+
+        window[callbackName] = (data) => {
+            console.log('今日狀態檢查結果:', data);
             setTodayStatus(data);
-        } catch (error) {
-            console.error('檢查今日狀態失敗:', error);
-            setTodayStatus(null);
-        } finally {
             setCheckingStatus(false);
-        }
+            delete window[callbackName];
+            document.body.removeChild(script);
+        };
+
+        script.onerror = () => {
+            console.error('檢查今日狀態失敗');
+            setTodayStatus(null);
+            setCheckingStatus(false);
+            delete window[callbackName];
+            if (script.parentNode) document.body.removeChild(script);
+        };
+
+        script.src = `${url}?action=checkToday&system=${encodeURIComponent(systemName)}&callback=${callbackName}`;
+        document.body.appendChild(script);
     };
 
     const handleChange = (id, value) => {
