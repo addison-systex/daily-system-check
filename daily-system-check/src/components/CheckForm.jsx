@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const CheckItem = ({ id, label, value, onChange, isOther, otherNote, onOtherNoteChange }) => {
+const CheckItem = ({ id, label, value, onChange }) => {
     const isYes = value === 'Y';
     const isNo = value === 'N';
 
@@ -9,14 +9,13 @@ const CheckItem = ({ id, label, value, onChange, isOther, otherNote, onOtherNote
         <div className="space-y-2">
             <div
                 className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer ${isYes ? 'bg-green-50 border-2 border-green-400' :
-                    isNo ? 'bg-red-50 border-2 border-red-400' :
-                        'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
+                        isNo ? 'bg-red-50 border-2 border-red-400' :
+                            'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
                     }`}
             >
                 <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
                     <span className="text-morandi-primary font-bold mr-2">{id}</span>
                     {label}
-                    {isOther && <span className="text-morandi-muted text-xs ml-2">(非必填)</span>}
                 </label>
                 <div className="flex space-x-3">
                     <label
@@ -57,9 +56,42 @@ const CheckItem = ({ id, label, value, onChange, isOther, otherNote, onOtherNote
                     </label>
                 </div>
             </div>
+        </div>
+    );
+};
 
-            {/* 其他項目的說明欄位 */}
-            {isOther && (isYes || isNo) && (
+// 「其他」項目使用 checkbox
+const OtherItem = ({ id, label, value, onChange }) => {
+    const isChecked = !!value;
+
+    return (
+        <div className="space-y-2">
+            <div
+                className={`flex items-center justify-between py-4 px-4 rounded-lg transition-all duration-300 ${isChecked ? 'bg-blue-50 border-2 border-blue-400' :
+                        'bg-white border border-morandi-border hover:bg-gray-50 hover:border-morandi-primary'
+                    }`}
+            >
+                <label className="text-morandi-text text-sm font-medium flex-1 cursor-pointer">
+                    <span className="text-morandi-primary font-bold mr-2">{id}</span>
+                    {label}
+                    <span className="text-morandi-muted text-xs ml-2">(選填)</span>
+                </label>
+                <label
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${isChecked ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 hover:bg-blue-100'
+                        }`}
+                >
+                    <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => onChange(id, e.target.checked ? '' : null)}
+                        className="form-checkbox text-blue-500 focus:ring-blue-500 h-4 w-4 rounded"
+                    />
+                    <span className="text-sm font-medium">有其他事項</span>
+                </label>
+            </div>
+
+            {/* 勾選後顯示說明欄位 */}
+            {isChecked && (
                 <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
@@ -68,8 +100,8 @@ const CheckItem = ({ id, label, value, onChange, isOther, otherNote, onOtherNote
                     <input
                         type="text"
                         placeholder="請輸入說明..."
-                        value={otherNote || ''}
-                        onChange={(e) => onOtherNoteChange(id, e.target.value)}
+                        value={value || ''}
+                        onChange={(e) => onChange(id, e.target.value)}
                         className="w-full rounded-lg border-morandi-border bg-white p-2.5 text-sm focus:ring-2 focus:ring-morandi-primary outline-none"
                     />
                 </motion.div>
@@ -88,7 +120,7 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
 
     const [selectedSystem, setSelectedSystem] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    const [todayStatus, setTodayStatus] = useState(null); // { completed: boolean, checker: string }
+    const [todayStatus, setTodayStatus] = useState(null);
     const [checkingStatus, setCheckingStatus] = useState(false);
 
     // 當選擇系統時,自動帶入負責人並檢查今日狀態
@@ -179,10 +211,6 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         setFormData(prev => ({ ...prev, [id]: value }));
     };
 
-    const handleOtherNoteChange = (id, note) => {
-        setFormData(prev => ({ ...prev, [`${id}_note`]: note }));
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -221,6 +249,14 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
         return isOther || formData[item.id];
     });
     const isFormValid = formData.systemName && formData.checker && allItemsFilled;
+
+    // 按項目編號前綴分組 (ED, EM, EY, OT, etc.)
+    const groupedItems = checkItems.reduce((acc, item) => {
+        const prefix = item.id.match(/^[A-Z]+/)?.[0] || 'OTHER';
+        if (!acc[prefix]) acc[prefix] = [];
+        acc[prefix].push(item);
+        return acc;
+    }, {});
 
     // 獲取代理人選項
     const getDeputyOptions = () => {
@@ -361,23 +397,37 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, onSucc
                     )}
                 </div>
 
-                {/* Checklist - 不顯示分組標題 */}
-                <div className="bg-white p-4 rounded-xl border border-morandi-border space-y-3">
-                    {checkItems.map(item => {
-                        const isOther = item.id === 'OT01' || item.description.includes('其他');
-                        return (
-                            <CheckItem
-                                key={item.id}
-                                id={item.id}
-                                label={item.description}
-                                value={formData[item.id] || ''}
-                                onChange={handleChange}
-                                isOther={isOther}
-                                otherNote={formData[`${item.id}_note`]}
-                                onOtherNoteChange={handleOtherNoteChange}
-                            />
-                        );
-                    })}
+                {/* Checklist - 分組但不顯示標題 */}
+                <div className="space-y-4">
+                    {Object.entries(groupedItems).map(([category, items]) => (
+                        <div key={category} className="bg-white p-4 rounded-xl border border-morandi-border space-y-3">
+                            {items.map(item => {
+                                const isOther = item.id === 'OT01' || item.description.includes('其他');
+
+                                if (isOther) {
+                                    return (
+                                        <OtherItem
+                                            key={item.id}
+                                            id={item.id}
+                                            label={item.description}
+                                            value={formData[item.id]}
+                                            onChange={handleChange}
+                                        />
+                                    );
+                                }
+
+                                return (
+                                    <CheckItem
+                                        key={item.id}
+                                        id={item.id}
+                                        label={item.description}
+                                        value={formData[item.id] || ''}
+                                        onChange={handleChange}
+                                    />
+                                );
+                            })}
+                        </div>
+                    ))}
                 </div>
 
                 <button

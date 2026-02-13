@@ -178,13 +178,14 @@ function doPost(e) {
     
     // 加入目前檢查項目的值
     currentCheckItemIds.forEach(id => {
-      let value = data[id] || '';
-      // 如果有對應的 _note 欄位,附加說明
-      const noteKey = `${id}_note`;
-      if (data[noteKey]) {
-        value = value + (value ? ': ' : '') + data[noteKey];
+      // 「其他」項目 (OT01) 只存說明欄位的值
+      if (id === 'OT01' || id.startsWith('OT')) {
+        dataMap[id] = data[id] || '';
+      } else {
+        // 一般項目存 Y/N
+        let value = data[id] || '';
+        dataMap[id] = value;
       }
-      dataMap[id] = value;
     });
     
     // 根據當前表頭順序組裝資料列 - 必須比對欄位名稱
