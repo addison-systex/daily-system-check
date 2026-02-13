@@ -340,73 +340,121 @@ export default function CheckForm({ systems, checkItems, prefilledSystem, initia
 
             <form onSubmit={handleSubmit} className="space-y-8">
                 {/* 系統選擇區塊 - 採更簡約的設計 */}
-                <div className="bg-white/60 backdrop-blur-sm p-6 rounded-3xl border border-white shadow-sm space-y-6">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-morandi-primary"></div>
-                        <h2 className="text-[10px] font-bold text-morandi-primary uppercase tracking-widest">Identify Target</h2>
+                {/* --- 基本資訊與身分識別區塊 --- */}
+                <div className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] border border-white shadow-xl space-y-8 relative overflow-hidden text-left">
+                    {/* 背景微裝飾 */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-morandi-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+
+                    <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
+                        <div className="p-2 bg-slate-900 rounded-xl">
+                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Protocol Specs</h2>
+                            <p className="text-lg font-bold text-slate-800">基本資訊識別</p>
+                        </div>
                     </div>
 
-                    <div>
-                        <select
-                            className="w-full rounded-2xl border-morandi-border bg-white p-4 text-sm focus:ring-4 focus:ring-morandi-primary/10 outline-none shadow-sm transition-all cursor-pointer"
-                            value={formData.systemName}
-                            onChange={(e) => handleSystemChange(e.target.value)}
-                            required
-                        >
-                            <option value="">請選取欲報告之系統...</option>
-                            {systems.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-6 text-left">
+                        {/* 系統選取 */}
                         <div className="space-y-2">
-                            <span className="text-[10px] font-bold text-morandi-muted/60 uppercase ml-1">責任人</span>
-                            <div className="w-full rounded-2xl bg-gray-100/50 p-4 text-sm text-morandi-text opacity-70 border border-transparent">
-                                {formData.checker || "---"}
-                            </div>
-                        </div>
-                        <div className="flex items-end">
-                            <label className="flex flex-1 items-center justify-between p-4 bg-white rounded-2xl border border-morandi-border hover:border-morandi-primary transition-all cursor-pointer shadow-sm group">
-                                <span className="text-sm font-medium text-morandi-text group-hover:text-morandi-primary">協助代理檢核</span>
-                                <input
-                                    type="checkbox"
-                                    checked={formData.isDeputy}
-                                    onChange={(e) => handleChange('isDeputy', e.target.checked)}
-                                    className="w-5 h-5 rounded-lg border-morandi-border text-morandi-primary focus:ring-morandi-primary transition-all"
-                                />
+                            <label className="text-[11px] font-bold text-slate-500 ml-1 uppercase tracking-wider flex items-center">
+                                <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" /></svg>
+                                Target System
                             </label>
+                            <select
+                                className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50/50 p-4 text-[15px] font-bold text-slate-700 focus:border-morandi-primary focus:bg-white outline-none transition-all cursor-pointer shadow-inner"
+                                value={formData.systemName}
+                                onChange={(e) => handleSystemChange(e.target.value)}
+                                required
+                            >
+                                <option value="">請選取欲報告之系統...</option>
+                                {systems.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                            </select>
                         </div>
-                    </div>
 
-                    <AnimatePresence>
-                        {formData.isDeputy && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                <div className="p-4 pt-0">
-                                    <span className="text-[10px] font-bold text-morandi-primary uppercase ml-1 mb-2 block tracking-widest">代理人身分</span>
-                                    {getDeputyOptions().length > 0 ? (
-                                        <select
-                                            className="w-full rounded-2xl border-morandi-primary/20 bg-white p-3 text-sm focus:ring-4 focus:ring-morandi-primary/10 outline-none shadow-sm transition-all"
-                                            value={formData.deputyName}
-                                            onChange={(e) => handleChange('deputyName', e.target.value)}
-                                            required={formData.isDeputy}
+                        {/* 責任人資訊卡 */}
+                        <AnimatePresence>
+                            {formData.systemName && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2"
+                                >
+                                    {/* 責任人顯示 */}
+                                    <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between shadow-lg">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg">👤</div>
+                                            <div>
+                                                <p className="text-[9px] font-bold text-white/50 uppercase tracking-widest">Owner</p>
+                                                <p className="text-md font-bold text-white">{formData.checker}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 身分切換器 (替代原本的 Checkbox) */}
+                                    <div className="flex p-1 bg-slate-100 rounded-2xl">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleChange('isDeputy', false)}
+                                            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!formData.isDeputy ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 opacity-60'}`}
                                         >
-                                            <option value="">選取您的姓名...</option>
-                                            {getDeputyOptions().map(deputy => <option key={deputy} value={deputy}>{deputy}</option>)}
-                                        </select>
+                                            本人報表
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleChange('isDeputy', true)}
+                                            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${formData.isDeputy ? 'bg-indigo-500 text-white shadow-md' : 'text-slate-400 opacity-60'}`}
+                                        >
+                                            代理檢核
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* 代理人選單 */}
+                        <AnimatePresence>
+                            {formData.isDeputy && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden bg-indigo-50/50 p-5 rounded-3xl border-2 border-indigo-100 border-dashed"
+                                >
+                                    <span className="text-[10px] font-black text-indigo-400 uppercase ml-1 mb-2 block tracking-[0.2em]">Assign Agent Identity</span>
+                                    {getDeputyOptions().length > 0 ? (
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {getDeputyOptions().map(deputy => (
+                                                <button
+                                                    key={deputy}
+                                                    type="button"
+                                                    onClick={() => handleChange('deputyName', deputy)}
+                                                    className={`p-3 rounded-xl border-2 text-sm font-bold transition-all ${formData.deputyName === deputy
+                                                            ? 'bg-indigo-500 border-indigo-500 text-white shadow-md'
+                                                            : 'bg-white border-transparent text-slate-600 hover:border-indigo-200 shadow-sm'
+                                                        }`}
+                                                >
+                                                    {deputy}
+                                                </button>
+                                            ))}
+                                        </div>
                                     ) : (
                                         <input
                                             type="text"
-                                            className="w-full rounded-2xl border-morandi-primary/20 bg-white p-3 text-sm focus:ring-4 focus:ring-morandi-primary/10 outline-none shadow-sm"
+                                            className="w-full rounded-2xl border-2 border-indigo-100 bg-white p-4 text-sm font-bold text-slate-700 focus:border-indigo-400 outline-none shadow-sm transition-all"
                                             value={formData.deputyName}
                                             onChange={(e) => handleChange('deputyName', e.target.value)}
-                                            placeholder="請輸入您的姓名"
+                                            placeholder="請輸入代理人姓名..."
                                             required={formData.isDeputy}
                                         />
                                     )}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
                 {/* 分組檢核項目區塊 */}
